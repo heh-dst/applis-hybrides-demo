@@ -5,6 +5,7 @@ from typing import Mapping
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.encoders import jsonable_encoder
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -33,6 +34,10 @@ app.state.attractions = [
 ]
 app.state.attraction_version = 1
 app.state.attraction_last_modified = datetime.now(timezone.utc)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8081"],
+)
 
 
 @app.get("/attractions", response_model=list[Attraction])
@@ -66,7 +71,7 @@ def get_attractions(request: Request) -> Response:
 
 
 @app.post("/attractions/bump_version")
-def bump_attraction_version(request: Request):
+def bump_attraction_version(request: Request) -> dict[str, str]:
     request.app.state.attraction_version += 1
     request.app.state.attraction_last_modified = datetime.now(timezone.utc)
     formatted_last_modified = request.app.state.attraction_last_modified.strftime(
